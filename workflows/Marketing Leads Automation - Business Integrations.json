@@ -1,0 +1,378 @@
+{
+  "name": "Marketing Leads Automation - Business Integrations",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marketing-lead-automation",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "content-type"
+              }
+            ]
+          }
+        }
+      },
+      "id": "3755bba1-2f7a-4244-a7f3-3162826dd0c8",
+      "name": "Website Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        48,
+        240
+      ],
+      "webhookId": "133167f5-fbb5-44c1-bfa1-301c9212a683"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $json.body || $json;\nconst lower = (v) => String(v || '').toLowerCase();\nconst pain = lower(input.pain);\nconst interest = lower(input.interest);\nlet score = 20;\nif (['500-2000','2000+'].includes(input.company_size)) score += 18;\nif (['this-week','this-month'].includes(input.timeline)) score += 20;\nif (['1000-3000','3000+'].includes(input.budget)) score += 18;\n['lead','ads','facebook','meta','google ads','crm','email','follow up','follow-up','sales','website'].forEach(k => {\n  if (pain.includes(k) || interest.includes(k)) score += 4;\n});\nscore = Math.min(score, 100);\nconst tier = score >= 80 ? 'Hot lead' : score >= 55 ? 'Warm lead' : 'Nurture lead';\nconst owner = score >= 80 ? 'Sales Manager' : score >= 55 ? 'Sales Development Rep' : 'Marketing Nurture List';\nconst stage = score >= 80 ? 'Book discovery call today' : score >= 55 ? 'Send qualification email' : 'Add to weekly nurture campaign';\nconst first = String(input.full_name || 'there').split(' ')[0];\nreturn [{ json: {\n  status: 'success',\n  workflow: 'Marketing Leads Automation',\n  lead: input,\n  qualification: { score, tier, owner, stage },\n  business_actions: [\n    `Add lead to Google Sheet: ${tier}, score ${score}`,\n    `Create CRM task for ${owner}`,\n    score >= 80 ? 'Send instant sales alert to Slack/email' : 'Add lead to nurture/follow-up queue',\n    'Generate personalized follow-up email'\n  ],\n  sheet_row: {\n    created_at: new Date().toISOString(),\n    name: input.full_name || '',\n    company: input.company || '',\n    email: input.email || '',\n    phone: input.phone || '',\n    source: input.source || '',\n    interest: input.interest || '',\n    company_size: input.company_size || '',\n    budget: input.budget || '',\n    timeline: input.timeline || '',\n    score,\n    tier,\n    owner,\n    next_action: stage,\n    pain: input.pain || ''\n  },\n  sales_notification: `New ${tier}: ${input.full_name || ''} from ${input.company || ''}\\nScore: ${score}/100\\nInterest: ${input.interest || ''}\\nSource: ${input.source || ''}\\nNext action: ${stage}\\nPain point: ${input.pain || ''}`,\n  follow_up_email: {\n    to: input.email || '',\n    subject: `Thanks for your interest in marketing automation, ${first}`,\n    body: `Hi ${first},\\n\\nThanks for reaching out about ${input.interest || 'marketing automation'}. Based on what you shared, the best next step is: ${stage}.\\n\\nI can help build an automation that captures leads, scores them, saves them to a tracker, and notifies the sales team so follow-ups do not get missed.\\n\\nBest,\\nYour Name`\n  }\n}}];\n"
+      },
+      "id": "0ba0b1bb-fa40-4392-8b16-9811e7b8b8b2",
+      "name": "Qualify Lead + Build Business Actions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/14N-PQNiqIw03zfxAqVD0nMS-oFJKWvVjIJCmeVTpYr4/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company": "={{ $json.sheet_row.company }}",
+            "Email": "={{ $json.sheet_row.email }}",
+            "Phone": "={{ $json.sheet_row.phone }}",
+            "Source": "={{ $json.sheet_row.source }}",
+            "Next Action": "={{ $json.sheet_row.nextAction }}",
+            "Date Created": "={{ $json.sheet_row.dateCreated }}",
+            "Lead Name": "={{ $json.sheet_row.leadName }}",
+            "Budget": "={{ $json.sheet_row.budget }}",
+            "Timeline": "={{ $json.sheet_row.timeline }}",
+            "Pain Point": "={{ $json.sheet_row.painPoint }}",
+            "Lead Score": "={{ $json.sheet_row.leadScore }}",
+            "Lead Tier": "={{ $json.sheet_row.leadTier }}",
+            "Assigned Owner": "={{ $json.sheet_row.assignedOwner }}",
+            "Follow Up Subject": "={{ $json.sheet_row.followUpSubject }}",
+            "Follow Up Draft": "={{ $json.sheet_row.followUpDraft }}",
+            "Status": "={{ $json.sheet_row.status }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date Created",
+              "displayName": "Date Created",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Lead Name",
+              "displayName": "Lead Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Timeline",
+              "displayName": "Timeline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Pain Point",
+              "displayName": "Pain Point",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Lead Tier",
+              "displayName": "Lead Tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Assigned Owner",
+              "displayName": "Assigned Owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Next Action",
+              "displayName": "Next Action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Follow Up Subject",
+              "displayName": "Follow Up Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Follow Up Draft",
+              "displayName": "Follow Up Draft",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "28404858-53e8-4f8c-809c-007c161772dd",
+      "name": "Append Lead to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        768,
+        -16
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "tvjhBAPazNKFGo37",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.sheet_row.email }}",
+        "subject": "={{ $json.sheet_row.followUpSubject }}",
+        "message": "={{ $json.sheet_row.followUpDraftHtml }}",
+        "options": {}
+      },
+      "id": "4fad22b6-097b-42dc-8b06-0a0a2d4308e3",
+      "name": "Send Sales Notification Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        768,
+        224
+      ],
+      "webhookId": "711b382a-225e-4301-8b23-885a7861e210",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "crR5SAFlUL2zDnkp",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "dceab667-a6f9-4da5-a13f-d57259c4182d",
+      "name": "Respond to Website",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        528,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\n\n// Data from previous node\nconst lead = raw.lead || raw.body || raw;\nconst qualification = raw.qualification || {};\n\nconst leadName = lead.full_name || lead.leadName || lead.name || \"\";\nconst email = lead.email || \"\";\nconst company = lead.company || \"\";\n\n// Fix phone for Google Sheets\n// Google Sheets sometimes treats +63... as a formula, so we force it to text.\nconst rawPhone = lead.phone || \"\";\nconst phone = rawPhone ? \"'\" + String(rawPhone) : \"\";\n\n// Source should come from website input\n// If the website sends Facebook Ads, it will show Facebook Ads.\n// If the website sends Google Ads, Website, Referral, etc., it will show that.\nconst source = lead.source || lead.lead_source || lead.source_system || \"Unknown Source\";\n\nconst interest = lead.interest || \"Marketing lead automation\";\nconst companySize = lead.company_size || \"\";\nconst budget = lead.budget || \"\";\nconst timeline = lead.timeline || \"\";\nconst painPoint = lead.pain || lead.painPoint || \"\";\nconst submittedAt = lead.submitted_at || new Date().toISOString();\n\nlet leadScore = qualification.score || 20;\nlet leadTier = qualification.tier || \"Nurture Lead\";\nlet assignedOwner = qualification.owner || \"Marketing Team\";\nlet nextAction = qualification.stage || qualification.nextAction || \"Add to nurture sequence\";\n\nconst firstName = leadName ? leadName.split(\" \")[0] : \"there\";\nconst interestResponses = {\n  \"Marketing lead automation\": {\n    shortDescription:\n      \"A marketing leads automation can help your business capture inquiries, save them to Google Sheets, qualify them automatically, and send follow-up emails faster.\",\n    recommendedAction:\n      \"Review your current lead sources, connect your lead form to a tracker, and automate first-response follow-ups.\",\n    callFocus:\n      \"During our call, we can review where your leads are coming from, how your team currently follows up, and where automation can reduce missed opportunities.\"\n  },\n\n  \"Email follow-up automation\": {\n    shortDescription:\n      \"An email follow-up automation can help your business respond to leads faster, send reminders automatically, and keep prospects engaged without manual follow-up.\",\n    recommendedAction:\n      \"Set up automated email sequences for new leads, warm prospects, and missed follow-ups.\",\n    callFocus:\n      \"During our call, we can map your current follow-up process and identify which emails should be automated first.\"\n  },\n\n  \"Google Sheets automation\": {\n    shortDescription:\n      \"A Google Sheets automation can help your business organize incoming leads, update records automatically, and reduce manual copy-paste work.\",\n    recommendedAction:\n      \"Connect your lead sources to Google Sheets and automatically update lead status, owner, score, and next action.\",\n    callFocus:\n      \"During our call, we can review your current spreadsheet workflow and identify which manual steps can be automated.\"\n  },\n\n  \"CRM routing automation\": {\n    shortDescription:\n      \"A CRM routing automation can help your business assign leads to the right person, update deal stages, and make sure high-value leads are handled quickly.\",\n    recommendedAction:\n      \"Create rules that route leads based on source, budget, timeline, score, and business need.\",\n    callFocus:\n      \"During our call, we can define your lead routing rules and decide how hot, warm, and nurture leads should be handled.\"\n  },\n\n  \"Customer support automation\": {\n    shortDescription:\n      \"A customer support automation can help your business categorize requests, assign tickets, prioritize urgent issues, and send faster first responses.\",\n    recommendedAction:\n      \"Automate ticket classification, priority tagging, and initial response drafting.\",\n    callFocus:\n      \"During our call, we can review your support process and identify which recurring issues can be automated.\"\n  },\n\n  \"Appointment booking automation\": {\n    shortDescription:\n      \"An appointment booking automation can help your business schedule calls, send reminders, reduce no-shows, and keep your calendar organized.\",\n    recommendedAction:\n      \"Connect your inquiry form to calendar scheduling, confirmation emails, and reminder messages.\",\n    callFocus:\n      \"During our call, we can review your booking process and identify where automation can save time.\"\n  }\n};\n\nconst selectedInterestResponse =\n  interestResponses[interest] || {\n    shortDescription:\n      \"An automation workflow can help your business reduce manual tasks, organize incoming requests, and respond faster to customers or leads.\",\n    recommendedAction:\n      \"Review your current process and identify the repetitive steps that can be automated.\",\n    callFocus:\n      \"During our call, we can map your workflow and choose the best automation opportunities.\"\n  };\n\nconst followUpSubject = `Thanks for your interest in marketing automation ${firstName}!`;\n\nconst followUpDraftText = `Hi ${firstName}!\n\nThank you for reaching out to us about ${interest}!\n\nBased on what you shared, your current challenge is:\n\n${painPoint}\n\n${selectedInterestResponse.shortDescription}\n\nRecommended automation approach:\n${selectedInterestResponse.recommendedAction}\n\n${selectedInterestResponse.callFocus}\n\nWould you be available for a quick discovery call this week?\n\nBest regards,\nStephen Matthew Malabanan\n${assignedOwner}`;\n\nconst followUpDraftHtml = `\n<p>Hi ${firstName}!</p>\n\n<p>Thank you for reaching out to us about <strong>${interest}</strong>!</p>\n\n<p>Based on what you shared in our website, your current challenge is:</p>\n\n<p>${painPoint}</p>\n\n<p>${selectedInterestResponse.shortDescription}</p>\n\n<p><strong>Our Recommended automation approach:</strong></p>\n\n<p>${selectedInterestResponse.recommendedAction}</p>\n\n<p>${selectedInterestResponse.callFocus}</p>\n\n<p>Would you be available for a quick discovery call this week?</p>\n\n<p>\nBest regards,<br>\n<strong>Stephen Matthew Malabanan</strong><br>\n<strong>${assignedOwner}</strong>\n</p>\n`;\n\nreturn [\n  {\n    json: {\n      sheet_row: {\n        dateCreated: submittedAt,\n        leadName: leadName,\n        email: email,\n        company: company,\n        phone: phone,\n        source: source,\n        budget: budget,\n        timeline: timeline,\n        painPoint: painPoint,\n        leadScore: leadScore,\n        leadTier: leadTier,\n        assignedOwner: assignedOwner,\n        nextAction: nextAction,\n        followUpSubject: followUpSubject,\n        followUpDraft: followUpDraftText,\n        followUpDraftHtml: followUpDraftHtml,\n        status: \"New Lead\",\n        interest: interest,\n        selectedInterestResponse: selectedInterestResponse,\n        companySize: companySize\n      }\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        112
+      ],
+      "id": "f7aab424-3fba-45e3-a4ac-3e4b86067dcd",
+      "name": "Prepare Lead Row"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Website Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Qualify Lead + Build Business Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualify Lead + Build Business Actions": {
+      "main": [
+        [
+          {
+            "node": "Respond to Website",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Lead Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Lead Row": {
+      "main": [
+        [
+          {
+            "node": "Append Lead to Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Sales Notification Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a839da13-8d51-48a7-82c8-37b414f8d1d4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cc596dcbfbf95d91705e171a0b596b5e51eae77a1df32d76b6e05fe350dce86e"
+  },
+  "id": "280MZGNC0UYvCRfO",
+  "tags": []
+}

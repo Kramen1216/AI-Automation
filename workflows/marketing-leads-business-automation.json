@@ -1,0 +1,232 @@
+{
+  "name": "Marketing Leads Automation - Business Integrations",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Business version\n\n1. Import this workflow.\n2. Connect Google Sheets/Gmail/Slack credentials.\n3. Enable the disabled app nodes after credentials are selected.\n4. Publish workflow.\n\nThe Respond node remains active so the website gets a result.",
+        "height": 220,
+        "width": 420,
+        "color": 4
+      },
+      "id": "40bdac95-f6e4-4ee0-9056-9a2fc213e989",
+      "name": "Setup Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        120,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marketing-lead-automation",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "content-type"
+              }
+            ]
+          }
+        }
+      },
+      "id": "1145b10e-35b9-4b82-9ee4-94d2086d6d91",
+      "name": "Website Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        160,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $json.body || $json;\nconst lower = (v) => String(v || '').toLowerCase();\nconst pain = lower(input.pain);\nconst interest = lower(input.interest);\nlet score = 20;\nif (['500-2000','2000+'].includes(input.company_size)) score += 18;\nif (['this-week','this-month'].includes(input.timeline)) score += 20;\nif (['1000-3000','3000+'].includes(input.budget)) score += 18;\n['lead','ads','facebook','meta','google ads','crm','email','follow up','follow-up','sales','website'].forEach(k => {\n  if (pain.includes(k) || interest.includes(k)) score += 4;\n});\nscore = Math.min(score, 100);\nconst tier = score >= 80 ? 'Hot lead' : score >= 55 ? 'Warm lead' : 'Nurture lead';\nconst owner = score >= 80 ? 'Sales closer' : score >= 55 ? 'Sales development rep' : 'Marketing nurture list';\nconst stage = score >= 80 ? 'Book discovery call today' : score >= 55 ? 'Send qualification email' : 'Add to weekly nurture campaign';\nconst first = String(input.full_name || 'there').split(' ')[0];\nreturn [{ json: {\n  status: 'success',\n  workflow: 'Marketing Leads Automation',\n  lead: input,\n  qualification: { score, tier, owner, stage },\n  business_actions: [\n    `Add lead to Google Sheet: ${tier}, score ${score}`,\n    `Create CRM task for ${owner}`,\n    score >= 80 ? 'Send instant sales alert to Slack/email' : 'Add lead to nurture/follow-up queue',\n    'Generate personalized follow-up email'\n  ],\n  sheet_row: {\n    created_at: new Date().toISOString(),\n    name: input.full_name || '',\n    company: input.company || '',\n    email: input.email || '',\n    phone: input.phone || '',\n    source: input.source || '',\n    interest: input.interest || '',\n    company_size: input.company_size || '',\n    budget: input.budget || '',\n    timeline: input.timeline || '',\n    score,\n    tier,\n    owner,\n    next_action: stage,\n    pain: input.pain || ''\n  },\n  sales_notification: `New ${tier}: ${input.full_name || ''} from ${input.company || ''}\\nScore: ${score}/100\\nInterest: ${input.interest || ''}\\nSource: ${input.source || ''}\\nNext action: ${stage}\\nPain point: ${input.pain || ''}`,\n  follow_up_email: {\n    to: input.email || '',\n    subject: `Thanks for your interest in marketing automation, ${first}`,\n    body: `Hi ${first},\\n\\nThanks for reaching out about ${input.interest || 'marketing automation'}. Based on what you shared, the best next step is: ${stage}.\\n\\nI can help build an automation that captures leads, scores them, saves them to a tracker, and notifies the sales team so follow-ups do not get missed.\\n\\nBest,\\nYour Name`\n  }\n}}];\n"
+      },
+      "id": "2e66cafa-4319-4cc6-afc8-52f0c2c79954",
+      "name": "Qualify Lead + Build Business Actions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_GOOGLE_SHEET_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Created At": "={{ $json.sheet_row.created_at }}",
+            "Name": "={{ $json.sheet_row.name }}",
+            "Company": "={{ $json.sheet_row.company }}",
+            "Email": "={{ $json.sheet_row.email }}",
+            "Phone": "={{ $json.sheet_row.phone }}",
+            "Source": "={{ $json.sheet_row.source }}",
+            "Interest": "={{ $json.sheet_row.interest }}",
+            "Score": "={{ $json.sheet_row.score }}",
+            "Tier": "={{ $json.sheet_row.tier }}",
+            "Owner": "={{ $json.sheet_row.owner }}",
+            "Next Action": "={{ $json.sheet_row.next_action }}",
+            "Pain": "={{ $json.sheet_row.pain }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "fcdd1b43-4057-4135-87c4-9b0c0ac6e1fa",
+      "name": "Append Lead to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        700,
+        180
+      ],
+      "disabled": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "you@example.com",
+        "subject": "={{ 'New marketing lead: ' + $json.qualification.tier + ' - ' + $json.lead.company }}",
+        "message": "={{ $json.sales_notification }}",
+        "options": {}
+      },
+      "id": "e7f89b08-cad2-409e-b1a7-c14d835ca937",
+      "name": "Send Sales Notification Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        700,
+        420
+      ],
+      "disabled": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#sales-leads",
+        "text": "={{ $json.sales_notification }}",
+        "otherOptions": {}
+      },
+      "id": "6eb5c79d-6651-4e1b-ae57-8930a12570da",
+      "name": "Send Slack Sales Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        620
+      ],
+      "disabled": true,
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "ece94905-e07c-408d-ba83-3c0a86e3941f",
+      "name": "Respond to Website",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1010,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Website Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Qualify Lead + Build Business Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualify Lead + Build Business Actions": {
+      "main": [
+        [
+          {
+            "node": "Append Lead to Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Sales Notification Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Slack Sales Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "versionId": "5036e694-b921-481d-a348-309faf6dcf6c",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

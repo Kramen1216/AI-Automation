@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Marketing Leads Automation Portfolio</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <script src="assets/js/config.js" defer></script>
+  <script src="assets/js/app.js" defer></script>
+</head>
+<body>
+  <header class="nav"><div class="shell"><div class="brand"><span data-name>Your Name</span> · AI Automation Portfolio</div><div class="links"><a href="#demo">Demo</a><a href="#workflow">Workflow</a><a href="#setup">Setup</a><a href="#resume">Resume</a><a href="#contact">Contact</a></div></div></header>
+  <main>
+    <section class="hero shell">
+      <div>
+        <p class="eyebrow">n8n business automation demo</p>
+        <h1>Marketing leads automation for a real small business use case.</h1>
+        <p class="lede">This portfolio project is not just a text-output demo. It shows how a business can capture marketing leads, qualify them, save them to a lead tracker, alert sales, and prepare a follow-up email.</p>
+        <div class="actions"><a class="btn primary" href="#demo">Run business demo</a><a class="btn" href="workflows/marketing-leads-business-automation.json" download>Download n8n workflow</a></div>
+      </div>
+      <aside class="hero-card card">
+        <h2>Business problem</h2>
+        <ol class="mini-flow">
+          <li><span class="num">1</span><div><strong>Leads arrive from ads/forms.</strong><br><span>Business owners lose leads because follow-up is manual.</span></div></li>
+          <li><span class="num">2</span><div><strong>n8n scores and routes them.</strong><br><span>Hot leads go to sales; colder leads go to nurture.</span></div></li>
+          <li><span class="num">3</span><div><strong>Actions happen automatically.</strong><br><span>Google Sheets row, sales alert, CRM task, email draft.</span></div></li>
+        </ol>
+      </aside>
+    </section>
+
+    <section class="section shell" id="demo">
+      <p class="eyebrow">Live demo</p>
+      <h2>Submit a sample marketing lead</h2>
+      <p>This demonstrates a marketing lead automation for a business such as an agency, BPO, real estate team, clinic, gym, repair shop, training center, or ecommerce brand.</p>
+      <div class="grid">
+        <form id="leadForm" class="form-card card">
+          <div class="form-row two"><div><label for="full_name">Lead name</label><input id="full_name" name="full_name" value="Maria Santos" required /></div><div><label for="company">Company</label><input id="company" name="company" value="Bright Dental Clinic" required /></div></div>
+          <div class="form-row two"><div><label for="email">Email</label><input id="email" name="email" type="email" value="maria@example.com" required /></div><div><label for="phone">Phone</label><input id="phone" name="phone" value="+63 912 345 6789" /></div></div>
+          <div class="form-row two"><div><label for="source">Lead source</label><select id="source" name="source"><option>Facebook Ads</option><option>Google Search</option><option>Website Form</option><option>Referral</option><option>TikTok Ads</option></select></div><div><label for="interest">Interest</label><select id="interest" name="interest"><option>Marketing lead automation</option><option>CRM setup</option><option>Email follow-up automation</option><option>Appointment booking automation</option></select></div></div>
+          <div class="form-row two"><div><label for="company_size">Company size</label><select id="company_size" name="company_size"><option>1-10</option><option selected>11-50</option><option>51-200</option><option>500-2000</option><option>2000+</option></select></div><div><label for="budget">Monthly budget</label><select id="budget" name="budget"><option>Under 500</option><option>500-1000</option><option selected>1000-3000</option><option>3000+</option></select></div></div>
+          <div class="form-row"><label for="timeline">Timeline</label><select id="timeline" name="timeline"><option value="this-week">This week</option><option value="this-month" selected>This month</option><option value="next-quarter">Next quarter</option><option value="researching">Just researching</option></select></div>
+          <div class="form-row"><label for="pain">What problem do they need solved?</label><textarea id="pain" name="pain" rows="5">We get leads from Facebook Ads and our website but the team manually copies them to Google Sheets. Sometimes follow-ups are missed. We need automatic lead scoring, CRM routing, and email follow-up.</textarea></div>
+          <button id="submitLead" class="btn primary full" type="submit">Submit marketing lead</button>
+        </form>
+        <aside class="result-card card">
+          <div class="status-bar"><strong>Business automation result</strong><span class="pill">Applied workflow</span></div>
+          <div id="businessResult" class="business-result"><div class="email-box">Submit the form to create a sample business lead handoff.</div></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section shell" id="workflow">
+      <p class="eyebrow">Workflow design</p>
+      <h2>What the n8n workflow does</h2>
+      <div class="cards3">
+        <article class="info-card card"><h3>1. Capture</h3><p>The website form sends lead data to an n8n Webhook URL.</p></article>
+        <article class="info-card card"><h3>2. Qualify</h3><p>n8n scores the lead based on budget, timeline, company size, source, and problem.</p></article>
+        <article class="info-card card"><h3>3. Act</h3><p>The business version appends to Google Sheets and prepares/sends sales follow-up actions.</p></article>
+      </div>
+      <pre class="code">Website form → n8n Webhook → Lead scoring logic → Google Sheet row → Sales alert → Follow-up email draft</pre>
+    </section>
+
+    <section class="section shell" id="setup">
+      <p class="eyebrow">Setup</p>
+      <h2>Files included</h2>
+      <div class="cards3">
+        <article class="info-card card"><h3>Demo-safe workflow</h3><p><code>workflows/marketing-leads-demo-safe.json</code><br>No credentials needed. Good for practicing and interviews.</p></article>
+        <article class="info-card card"><h3>Business workflow</h3><p><code>workflows/marketing-leads-business-automation.json</code><br>Uses Google Sheets and Gmail/Slack-style handoff after credentials are connected.</p></article>
+        <article class="info-card card"><h3>Lead tracker template</h3><p><code>templates/marketing-leads-tracker.csv</code><br>Import into Google Sheets as your sample lead tracker.</p></article>
+      </div>
+    </section>
+
+    <section class="section shell" id="resume">
+      <p class="eyebrow">Resume</p>
+      <h2>Resume & background</h2>
+      <div class="resume-grid">
+        <article class="resume-card card">
+          <h3>Stephen Matthew Malabanan</h3>
+          <p class="role-line">AI Automation Engineer / Workflow Automation Builder</p>
+          <p>I already submitted my resume as part of the qualification requirements, but I included this section for quick reference during the portfolio walkthrough.</p>
+          <div class="resume-actions">
+            <a class="btn primary" href="Stephen_Matthew_Malabanan_Resume.pdf" target="_blank" rel="noopener">View / Download Resume</a>
+            <a class="btn" data-email href="mailto:you@example.com">Contact me</a>
+          </div>
+        </article>
+        <article class="resume-card card">
+          <h3>Relevant automation skills</h3>
+          <ul class="skill-list">
+            <li>n8n workflow automation</li>
+            <li>Website form to webhook integration</li>
+            <li>Google Sheets lead tracking</li>
+            <li>Gmail follow-up automation</li>
+            <li>JavaScript Code node logic</li>
+            <li>Lead scoring and routing workflows</li>
+            <li>Debugging n8n executions and JSON data</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section shell" id="contact"><div class="form-card card"><p class="eyebrow">Contact</p><h2><span data-name>Your Name</span></h2><p><a class="btn primary" data-email href="mailto:you@example.com">Email</a> <a class="btn" data-github href="#">GitHub</a> <a class="btn" data-linkedin href="#">LinkedIn</a></p></div></section>
+  </main>
+  <footer class="footer shell">Portfolio project: Marketing Leads Automation using website webhooks and n8n.</footer>
+</body>
+</html>
